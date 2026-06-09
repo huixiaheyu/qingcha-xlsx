@@ -21,7 +21,7 @@ from scripts.build_qingcha_table import (
 from scripts.xlsx_xml import NS, read_sheet_rows, write_table_rows
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-COMPLETE_DIR = BASE_DIR / "完整"
+COMPLETE_DIR = BASE_DIR / "archive" / "完整"
 
 
 class BuildQingchaTableTest(unittest.TestCase):

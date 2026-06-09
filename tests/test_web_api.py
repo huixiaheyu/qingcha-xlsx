@@ -12,7 +12,7 @@ except ModuleNotFoundError as exc:  # pragma: no cover - 未安装 Web 依赖时
 from scripts.build_qingcha_table import required_source_filenames
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-COMPLETE_DIR = BASE_DIR / "完整"
+COMPLETE_DIR = BASE_DIR / "archive" / "完整"
 
 
 def upload_payload(filenames: list[str]) -> list[tuple[str, tuple[str, object, str]]]:

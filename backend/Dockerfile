@@ -11,7 +11,8 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY scripts /app/scripts
 COPY backend /app/backend
 COPY frontend /app/frontend
-COPY 完整/清查表.xlsx /app/templates/清查表.xlsx
+RUN mkdir -p /app/templates
+COPY backend/templates/清查表.xlsx /app/templates/清查表.xlsx
 
 EXPOSE 8000
 

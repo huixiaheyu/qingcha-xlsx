@@ -19,9 +19,10 @@ from scripts.build_qingcha_table import (
 )
 
 BASE_DIR = Path(__file__).resolve().parents[2]
+BUNDLED_TEMPLATE_PATH = BASE_DIR / "backend" / "templates" / TEMPLATE_NAME
 TEMPLATE_PATH = Path("/app/templates") / TEMPLATE_NAME
 if not TEMPLATE_PATH.exists():
-    TEMPLATE_PATH = BASE_DIR / "完整" / TEMPLATE_NAME
+    TEMPLATE_PATH = BUNDLED_TEMPLATE_PATH
 
 FRONTEND_DIR = BASE_DIR / "frontend"
 
