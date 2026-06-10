@@ -242,18 +242,55 @@ class BuildQingchaTableTest(unittest.TestCase):
         self.assertEqual(by_code["152"]["K"], "贷")
         self.assertEqual(by_code["152001"]["K"], "贷")
 
-    def test_resource_sheet_maps_usage_status_and_area_columns(self) -> None:
+    def test_resource_sheet_maps_usage_area_and_resource_area_columns(self) -> None:
         build_workbook(self.complete_dir, self.output_path)
         rows = read_sheet_rows(self.output_path, "村集体经济组织资源信息表")
         by_code = {row["E"]: row for row in rows if row["row_number"] >= 5 and row.get("E")}
 
-        self.assertEqual(by_code["Y4110251012010006"]["I"], "出租经营")
+        self.assertEqual(by_code["Y4110251012010006"].get("I", ""), "")
         self.assertEqual(by_code["Y4110251012010006"]["M"], "5.20")
         self.assertEqual(by_code["Y4110251012010006"]["N"], "亩")
         self.assertEqual(by_code["Y4110251012010006"]["P"], "村内")
         self.assertEqual(by_code["Y4110251012010006"]["Q"], "2025-12-31")
-        self.assertEqual(by_code["Y4110251012010007"]["I"], "自主经营")
+        self.assertEqual(by_code["Y4110251012010007"]["I"], "7.04")
         self.assertEqual(by_code["Y4110251012010007"]["M"], "7.04")
+
+    def test_resource_sheet_uses_registered_resource_area_not_usage_area(self) -> None:
+        workbook_path = self.complete_dir / "资源明细数据.xlsx"
+        with ZipFile(workbook_path) as zf:
+            infos = zf.infolist()
+            contents = {info.filename: zf.read(info.filename) for info in infos}
+            workbook = ET.fromstring(contents["xl/workbook.xml"])
+            rels = ET.fromstring(contents["xl/_rels/workbook.xml.rels"])
+            relmap = {rel.attrib["Id"]: rel.attrib["Target"] for rel in rels.findall("pkgrel:Relationship", NS)}
+            rid = next(
+                sheet.attrib["{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"]
+                for sheet in workbook.findall("main:sheets/main:sheet", NS)
+                if sheet.attrib["name"] == "资源明细数据"
+            )
+            sheet_path = "xl/" + relmap[rid]
+            sheet = ET.fromstring(contents[sheet_path])
+            usage_area_cell = next(
+                item
+                for item in sheet.findall('.//main:sheetData/main:row[@r="2"]/main:c', NS)
+                if item.attrib["r"] == "U2"
+            )
+            for child in list(usage_area_cell):
+                usage_area_cell.remove(child)
+            usage_area_cell.attrib["t"] = "inlineStr"
+            is_node = ET.SubElement(usage_area_cell, f"{{{MAIN_NS}}}is")
+            text_node = ET.SubElement(is_node, f"{{{MAIN_NS}}}t")
+            text_node.text = "999.99"
+            contents[sheet_path] = ET.tostring(sheet, encoding="utf-8", xml_declaration=True)
+        with ZipFile(workbook_path, "w") as zf:
+            for info in infos:
+                zf.writestr(info, contents[info.filename])
+
+        build_workbook(self.complete_dir, self.output_path)
+        rows = read_sheet_rows(self.output_path, "村集体经济组织资源信息表")
+        by_code = {row["E"]: row for row in rows if row["row_number"] >= 5 and row.get("E")}
+
+        self.assertEqual(by_code["Y4110251012010006"]["M"], "5.20")
 
     def test_well_sheet_maps_caretaker_and_repairer_fields(self) -> None:
         build_workbook(self.complete_dir, self.output_path)

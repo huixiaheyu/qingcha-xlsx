@@ -391,9 +391,8 @@ def load_wells(complete_dir: Path) -> list[dict[str, str]]:
 def load_resources(complete_dir: Path) -> list[dict[str, str]]:
     """加载资源行，并在存在时保留直接出租明细。
 
-    ``display_area`` 优先使用源列 U，因为它位于源数据的使用情况区域；否则回退
-    到登记资源面积 H。后续会优先使用直接填写的承租人、期间、租金字段，而不是
-    合同推导出的匹配值。
+    目标资源面积使用源列 H 的登记资源面积。后续会优先使用直接填写的承租人、
+    期间、租金字段，而不是合同推导出的匹配值。
     """
     rows = read_sheet_rows(complete_dir / SOURCE_FILES["resources"], SOURCE_SHEETS["resources"])
     return [
@@ -407,8 +406,8 @@ def load_resources(complete_dir: Path) -> list[dict[str, str]]:
             "unit": row.get("I", ""),
             "owner": row.get("J", ""),
             "location": row.get("M", ""),
-            "usage_status": row.get("T", ""),
-            "display_area": row.get("U", "") or row.get("H", ""),
+            "usage_area": row.get("U", ""),
+            "display_area": row.get("H", ""),
             "direct_annual_rent": row.get("V", ""),
             "direct_tenant": row.get("W", ""),
             "direct_period": row.get("X", ""),
@@ -716,7 +715,7 @@ def fill_resource_sheet(
             "F": resource["name"],
             "G": resource["category"],
             "H": resource["attribute"],
-            "I": resource["usage_status"],
+            "I": resource["usage_area"],
             "J": resource["direct_tenant"],
             "K": normalize_resource_period(resource["direct_period"]),
             "L": resource["direct_annual_rent"],
