@@ -143,6 +143,68 @@ def save_workbook_package(path: Path, infos: list, contents: dict[str, bytes]) -
             zout.writestr(info, contents[info.filename])
 
 
+def append_unique_xml_child(parent: ET.Element, child: ET.Element) -> int:
+    """追加语义等价的 XML 子节点前先去重，并返回其索引。"""
+    serialized = ET.tostring(child, encoding='unicode')
+    for index, existing in enumerate(list(parent)):
+        if ET.tostring(existing, encoding='unicode') == serialized:
+            return index
+    parent.append(child)
+    parent.attrib['count'] = str(len(parent))
+    return len(parent) - 1
+
+
+def ensure_cell_font_color_style(styles_root: ET.Element, base_style_id: int, rgb: str) -> int:
+    """基于现有单元格样式克隆出指定字体颜色的新样式。"""
+    fonts = styles_root.find('main:fonts', NS)
+    cell_xfs = styles_root.find('main:cellXfs', NS)
+    assert fonts is not None
+    assert cell_xfs is not None
+
+    base_xf = list(cell_xfs)[base_style_id]
+    base_font_id = int(base_xf.attrib.get('fontId', '0'))
+    colored_font = deepcopy(list(fonts)[base_font_id])
+    for color in list(colored_font.findall('main:color', NS)):
+        colored_font.remove(color)
+    ET.SubElement(colored_font, f'{{{MAIN_NS}}}color', {'rgb': rgb})
+    font_id = append_unique_xml_child(fonts, colored_font)
+
+    colored_xf = deepcopy(base_xf)
+    colored_xf.attrib['fontId'] = str(font_id)
+    colored_xf.attrib['applyFont'] = '1'
+    return append_unique_xml_child(cell_xfs, colored_xf)
+
+
+def apply_text_color_to_cells(path: Path, sheet_name: str, color_by_cell_ref: dict[str, str]) -> None:
+    """按单元格引用批量设置字体颜色，同时保留原样式其余部分。"""
+    if not color_by_cell_ref:
+        return
+
+    infos, contents = load_workbook_package(path)
+    styles_root = ET.fromstring(contents['xl/styles.xml'])
+    with ZipFile(path, 'r') as zf:
+        sheet_path = get_sheet_path(zf, sheet_name)
+    sheet_root = ET.fromstring(contents[sheet_path])
+
+    style_cache: dict[tuple[int, str], int] = {}
+    for cell in sheet_root.findall('.//main:sheetData/main:row/main:c', NS):
+        cell_ref = cell.attrib.get('r', '')
+        rgb = color_by_cell_ref.get(cell_ref)
+        if rgb is None:
+            continue
+        base_style_id = int(cell.attrib.get('s', '0'))
+        cache_key = (base_style_id, rgb)
+        style_id = style_cache.get(cache_key)
+        if style_id is None:
+            style_id = ensure_cell_font_color_style(styles_root, base_style_id, rgb)
+            style_cache[cache_key] = style_id
+        cell.attrib['s'] = str(style_id)
+
+    contents['xl/styles.xml'] = ET.tostring(styles_root, encoding='utf-8', xml_declaration=True)
+    contents[sheet_path] = ET.tostring(sheet_root, encoding='utf-8', xml_declaration=True)
+    save_workbook_package(path, infos, contents)
+
+
 def write_table_rows(
     path: Path,
     sheet_name: str,

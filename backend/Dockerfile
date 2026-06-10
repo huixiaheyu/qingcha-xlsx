@@ -6,6 +6,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 COPY requirements.txt /app/requirements.txt
+ENV PIP_INDEX_URL=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+ENV PIP_TRUSTED_HOST=mirrors.tuna.tsinghua.edu.cn
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY scripts /app/scripts

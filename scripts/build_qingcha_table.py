@@ -28,7 +28,7 @@ import sys
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.xlsx_xml import list_sheet_names, read_sheet_rows, write_single_row, write_table_rows
+from scripts.xlsx_xml import apply_text_color_to_cells, list_sheet_names, read_sheet_rows, write_single_row, write_table_rows
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 COMPLETE_DIR = BASE_DIR / "完整"
@@ -86,6 +86,7 @@ TOTAL_LABEL = "合计"
 LEASED_USAGE_STATUS = "出租经营"
 ACCOUNTING_SYSTEM_NAME = "村集体经济组织会计制度(2024)"
 ZERO_AMOUNT = "0.00"
+HIGHLIGHT_FONT_RGB = "FFFF0000"
 INTANGIBLE_BLANK_ROWS = 18
 INTANGIBLE_COLUMNS = "ABCDEFGHIJKLMNOPQRST"
 
@@ -381,6 +382,7 @@ def load_wells(complete_dir: Path) -> list[dict[str, str]]:
             "caretaker_phone": row.get("AB", ""),
             "repairer_name": row.get("AC", ""),
             "repairer_phone": row.get("AD", ""),
+            "cleanup_value": row.get("AJ", ""),
         }
         for row in rows if row["row_number"] >= 3 and row.get("E")
     ]
@@ -619,7 +621,9 @@ def fill_asset_summary_sheet(output_path: Path, context: Context, assets: list[d
 def fill_well_sheet(output_path: Path, context: Context, wells: list[dict[str, str]], diagnostics: BuildDiagnostics | None = None) -> None:
     """填充水井行；数据从三行表头下方开始。"""
     rows = []
-    for row in wells:
+    highlight_cells: dict[str, str] = {}
+    for index, row in enumerate(wells):
+        row_number = TARGET_LAYOUTS["wells"].start_row + index
         rows.append({
             "A": context.social_code,
             "B": context.county,
@@ -643,7 +647,10 @@ def fill_well_sheet(output_path: Path, context: Context, wells: list[dict[str, s
             "T": row["repairer_name"],
             "U": row["repairer_phone"],
         })
+        if row["cleanup_value"] not in {"", "0", ZERO_AMOUNT}:
+            highlight_cells[f"E{row_number}"] = HIGHLIGHT_FONT_RGB
     write_layout_rows(output_path, "wells", rows, diagnostics)
+    apply_text_color_to_cells(output_path, TARGET_SHEETS["wells"], highlight_cells)
 
 
 def fill_intangible_sheet(output_path: Path, diagnostics: BuildDiagnostics | None = None) -> None:

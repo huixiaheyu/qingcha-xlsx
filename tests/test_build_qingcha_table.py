@@ -7,6 +7,8 @@ from pathlib import Path
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
 
+MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+
 from scripts.build_qingcha_table import (
     BuildDiagnostics,
     MissingSourceFilesError,
@@ -271,6 +273,62 @@ class BuildQingchaTableTest(unittest.TestCase):
         self.assertEqual(second["S"], "1599364814")
         self.assertEqual(second["T"], "关海军")
         self.assertEqual(second["U"], "1599364814")
+
+    def test_well_sheet_highlights_asset_code_when_cleanup_value_is_non_zero(self) -> None:
+        workbook_path = self.complete_dir / "水井固定资产统计数据.xlsx"
+        with ZipFile(workbook_path) as zf:
+            infos = zf.infolist()
+            contents = {info.filename: zf.read(info.filename) for info in infos}
+            workbook = ET.fromstring(contents["xl/workbook.xml"])
+            rels = ET.fromstring(contents["xl/_rels/workbook.xml.rels"])
+            relmap = {rel.attrib["Id"]: rel.attrib["Target"] for rel in rels.findall("pkgrel:Relationship", NS)}
+            rid = next(
+                sheet.attrib["{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"]
+                for sheet in workbook.findall("main:sheets/main:sheet", NS)
+                if sheet.attrib["name"] == "固定资产统计数据"
+            )
+            sheet = ET.fromstring(contents["xl/" + relmap[rid]])
+            cell = next(
+                item
+                for item in sheet.findall('.//main:sheetData/main:row[@r="3"]/main:c', NS)
+                if item.attrib["r"] == "AJ3"
+            )
+            for child in list(cell):
+                cell.remove(child)
+            cell.attrib["t"] = "inlineStr"
+            is_node = ET.SubElement(cell, f"{{{MAIN_NS}}}is")
+            text_node = ET.SubElement(is_node, f"{{{MAIN_NS}}}t")
+            text_node.text = "1.00"
+            contents["xl/" + relmap[rid]] = ET.tostring(sheet, encoding="utf-8", xml_declaration=True)
+        with ZipFile(workbook_path, "w") as zf:
+            for info in infos:
+                zf.writestr(info, contents[info.filename])
+
+        build_workbook(self.complete_dir, self.output_path)
+
+        with ZipFile(self.output_path) as zf:
+            styles = ET.fromstring(zf.read("xl/styles.xml"))
+            cell_xfs = styles.find(f"{{{MAIN_NS}}}cellXfs")
+            fonts = styles.find(f"{{{MAIN_NS}}}fonts")
+            workbook = ET.fromstring(zf.read("xl/workbook.xml"))
+            rels = ET.fromstring(zf.read("xl/_rels/workbook.xml.rels"))
+            relmap = {rel.attrib["Id"]: rel.attrib["Target"] for rel in rels.findall("pkgrel:Relationship", NS)}
+            rid = next(
+                sheet.attrib["{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"]
+                for sheet in workbook.findall("main:sheets/main:sheet", NS)
+                if sheet.attrib["name"] == "村集体经济组织固定资产表（水井）"
+            )
+            sheet = ET.fromstring(zf.read("xl/" + relmap[rid]))
+            cell = next(
+                item
+                for item in sheet.findall('.//main:sheetData/main:row[@r="6"]/main:c', NS)
+                if item.attrib["r"] == "E6"
+            )
+            style = list(cell_xfs)[int(cell.attrib["s"])]
+            font = list(fonts)[int(style.attrib["fontId"])]
+            color = font.find(f"{{{MAIN_NS}}}color")
+            self.assertIsNotNone(color)
+            self.assertEqual(color.attrib.get("rgb"), "FFFF0000")
 
     def test_asset_summary_sheet_maps_lease_and_financial_tail_columns(self) -> None:
         build_workbook(self.complete_dir, self.output_path)
