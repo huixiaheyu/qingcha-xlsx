@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图片EXIF水印工具</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%231d4ed8%22/><text x=%2216%22 y=%2223%22 font-family=%22sans-serif%22 font-size=%2220%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>清</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3/dist/jszip.min.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">清查工具集</a>
+      <a href="/qingcha" class="nav-link">清查表生成工具</a>
+      <a href="/watermark" class="nav-link active">图片EXIF水印工具</a>
+      <span class="nav-right">联系QQ：1912452912</span>
+    </div>
+  </nav>
+
+  <main class="page-content">
+    <section class="rounded bg-white p-8 shadow-sm ring-1 ring-gray-200">
+      <p class="text-sm font-semibold text-emerald-600">浏览器端处理 · 数据不上传</p>
+      <h1 class="mt-2 tracking-tight">图片 EXIF 水印工具</h1>
+      <p class="mt-2 text-gray-600">读取图片 EXIF 中的 GPS 经纬度，结合拍摄时间和输入信息，在左下角添加水印。</p>
+
+      <div class="mt-6">
+        <label class="block">
+          <span class="text-sm text-gray-600">村名（可选）</span>
+          <input id="villageInput" type="text" placeholder="例如：刁沟村" class="mt-2 block w-full max-w-xs rounded border border-gray-300 bg-white px-4 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+        </label>
+      </div>
+
+      <div class="mt-4">
+        <div id="dropZone" class="drop-zone">
+          <div class="drop-zone-icon">📁</div>
+          <p class="drop-zone-text">点击选择文件夹或拖拽文件夹到此处</p>
+          <p class="drop-zone-hint">支持 Chromium 内核浏览器（Chrome / Edge）</p>
+          <input id="folderInput" type="file" webkitdirectory multiple class="hidden" accept="image/*">
+        </div>
+      </div>
+
+      <div id="fileListArea" class="mt-4 hidden">
+        <div id="fileList"></div>
+        <div id="status" class="mt-2 text-sm text-gray-600"></div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button id="processBtn" class="rounded bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:bg-gray-300 hidden">开始处理</button>
+        </div>
+      </div>
+
+      <div id="progressArea" class="mt-4 hidden">
+        <div class="flex items-center justify-between text-sm mb-2">
+          <span id="progressLabel" class="text-gray-600">处理中...</span>
+          <span id="progressPercent" class="font-semibold text-gray-900">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div id="progressBar" class="progress-bar-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div id="resultArea" class="mt-4 hidden">
+        <div class="rounded bg-gray-50 p-4 ring-1 ring-gray-200">
+          <h2 class="text-gray-900">处理完成</h2>
+          <div class="result-stats">
+            <div class="stat-item">
+              <span class="text-emerald-600 text-xl">✅</span>
+              <div>
+                <div id="successCount" class="stat-value text-emerald-600">0</div>
+                <div class="stat-label">成功</div>
+              </div>
+            </div>
+            <div class="stat-item">
+              <span class="text-gray-400 text-xl">⏭️</span>
+              <div>
+                <div id="skipCount" class="stat-value text-gray-600">0</div>
+                <div class="stat-label">跳过（无GPS）</div>
+              </div>
+            </div>
+          </div>
+          <button id="downloadBtn" class="mt-4 rounded bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">下载全部 ZIP</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+.file-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.file-list li {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  background: #f8fafc;
+  font-size: 14px;
+  color: var(--body);
+}
+
+input[type="file"] {
+  width: 100%;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: #f8fafc;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.logs {
+  min-height: 200px;
+  max-height: 384px;
+  overflow: auto;
+  margin: 0;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: #111827;
+  color: #d1fae5;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: var(--aux);
+  line-height: 1.6;
+  font-size: 13px;
+}

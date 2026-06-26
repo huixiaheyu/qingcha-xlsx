@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>清查表生成工具</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%231d4ed8%22/><text x=%2216%22 y=%2223%22 font-family=%22sans-serif%22 font-size=%2220%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>清</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">清查工具集</a>
+      <a href="/qingcha" class="nav-link active">清查表生成工具</a>
+      <a href="/watermark" class="nav-link">图片EXIF水印工具</a>
+      <span class="nav-right">联系QQ：1912452912</span>
+    </div>
+  </nav>
+
+  <main class="page-content">
+    <section class="rounded bg-white p-8 shadow-sm ring-1 ring-gray-200">
+      <p class="text-sm font-semibold text-blue-600">固定模板 · 上传源表 · 下载结果</p>
+      <h1 class="mt-2 tracking-tight">清查表生成工具</h1>
+      <p class="mt-2 text-gray-600">系统使用服务端固定模板，只需上传 7 张源表。文件名允许以指定名称开头，例如带日期后缀也可识别。</p>
+
+      <div class="mt-6 rounded bg-gray-50 p-4 ring-1 ring-gray-200">
+        <h2>必需源表</h2>
+        <ul id="requiredFiles" class="mt-2 grid gap-2 text-sm text-gray-600 sm:grid-cols-2"></ul>
+      </div>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-[1fr_1.2fr]">
+        <label class="block">
+          <span class="text-sm text-gray-600">最终文件名</span>
+          <input id="outputFilename" type="text" value="清查表（已填充）.xlsx" placeholder="xxx-清查表（已填充）.xlsx" class="mt-2 block w-full rounded border border-gray-300 bg-white px-4 py-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100">
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-600">源表文件</span>
+          <input id="fileInput" type="file" multiple accept=".xlsx" class="mt-2 block w-full rounded border border-dashed border-gray-300 bg-white p-4 text-sm file:mr-4 file:rounded file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100">
+        </label>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button id="buildButton" class="rounded bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-gray-300">生成清查表</button>
+        <a id="downloadButton" class="pointer-events-none rounded bg-gray-300 px-6 py-2 text-sm font-semibold text-white" href="#" aria-disabled="true">下载生成文件</a>
+      </div>
+    </section>
+
+    <section class="mt-6 rounded bg-gray-950 p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold text-white">日志</h2>
+        <span class="text-xs text-gray-400">缺失、忽略、生成结果都会显示在这里</span>
+      </div>
+      <pre id="logs" class="mt-4 max-h-96 overflow-auto whitespace-pre-wrap text-sm leading-7 text-emerald-100">等待上传文件...</pre>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
